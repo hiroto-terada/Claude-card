@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fantasy Card Battle ⚔</title>
+  <style>
+    :root {
+      --gold: #d4af37;
+      --dark: #1a1208;
+      --panel: #241a0a;
+      --border: #5a3e1b;
+      --text: #e8d5a3;
+      --accent: #ff6b35;
+      --green: #4caf50;
+      --blue: #5bc0de;
+      --purple: #9c59b6;
+      --red: #e74c3c;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--dark);
+      color: var(--text);
+      font-family: 'Georgia', 'Times New Roman', serif;
+      min-height: 100vh;
+      background-image:
+        radial-gradient(ellipse at top, #2a1a05 0%, #1a1208 60%);
+    }
+
+    header {
+      text-align: center;
+      padding: 3rem 1rem 2rem;
+      border-bottom: 2px solid var(--border);
+      background: linear-gradient(180deg, rgba(212,175,55,0.08) 0%, transparent 100%);
+    }
+
+    header h1 {
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      color: var(--gold);
+      text-shadow: 0 0 20px rgba(212,175,55,0.5);
+      letter-spacing: 0.05em;
+    }
+
+    header p {
+      margin-top: 0.8rem;
+      font-size: 1.1rem;
+      color: #b09060;
+      font-style: italic;
+    }
+
+    .badge {
+      display: inline-block;
+      margin-top: 1.2rem;
+      padding: 0.3rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 0.85rem;
+      color: var(--gold);
+      background: rgba(212,175,55,0.08);
+    }
+
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    section { margin-bottom: 2.5rem; }
+
+    h2 {
+      font-size: 1.4rem;
+      color: var(--gold);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.5rem;
+      margin-bottom: 1.2rem;
+    }
+
+    /* ── インストール ─────────────────── */
+    .install-box {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.2rem 1.5rem;
+    }
+
+    .install-box pre {
+      font-family: 'Courier New', monospace;
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: #a8d8a8;
+    }
+
+    .install-box .comment { color: #6a8a6a; }
+
+    /* ── カードグリッド ───────────────── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.5rem;
+    }
+
+    .card-name { font-size: 1rem; color: var(--gold); font-weight: bold; }
+    .card-cost {
+      background: #3a2a0a;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; color: var(--gold); flex-shrink: 0;
+    }
+    .card-type { font-size: 0.75rem; color: #806040; margin-bottom: 0.4rem; }
+    .card-stats { font-size: 1.1rem; font-weight: bold; color: #e8d5a3; }
+    .card-desc { font-size: 0.75rem; color: #907050; font-style: italic; margin-top: 0.5rem; line-height: 1.4; }
+    .card-abilities { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-top: 0.4rem; }
+    .ability-tag {
+      font-size: 0.7rem;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      border: 1px solid;
+    }
+    .ab-first  { color: #f0c030; border-color: #f0c030; background: rgba(240,192,48,0.1); }
+    .ab-death  { color: #c060c0; border-color: #c060c0; background: rgba(192,96,192,0.1); }
+    .ab-fly    { color: #60b0f0; border-color: #60b0f0; background: rgba(96,176,240,0.1); }
+    .ab-tramp  { color: #f06030; border-color: #f06030; background: rgba(240,96,48,0.1); }
+    .ab-vigil  { color: #60d060; border-color: #60d060; background: rgba(96,208,96,0.1); }
+    .ab-life   { color: #f06080; border-color: #f06080; background: rgba(240,96,128,0.1); }
+
+    /* カードタイプ別ボーダー */
+    .type-creature { border-top: 3px solid var(--blue); }
+    .type-spell    { border-top: 3px solid var(--purple); }
+    .type-land     { border-top: 3px solid var(--green); }
+
+    /* ── ルールテーブル ───────────────── */
+    .rules-list { list-style: none; }
+    .rules-list li {
+      padding: 0.6rem 0.8rem;
+      border-left: 3px solid var(--border);
+      margin-bottom: 0.6rem;
+      background: rgba(255,255,255,0.02);
+      line-height: 1.5;
+    }
+    .rules-list li span { color: var(--gold); }
+
+    /* ── アビリティ一覧 ──────────────── */
+    .ability-table { width: 100%; border-collapse: collapse; }
+    .ability-table th, .ability-table td {
+      padding: 0.6rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+    .ability-table th { color: var(--gold); background: rgba(212,175,55,0.05); }
+    .sym { font-size: 1.1rem; }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      border-top: 1px solid var(--border);
+      color: #604030;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>⚔ Fantasy Card Battle ⚔</h1>
+  <p>昔ながらのファンタジー世界をテーマにした MtG ライクカードゲーム</p>
+  <div class="badge">🐍 Python 3 &nbsp;|&nbsp; プレイヤー vs CPU &nbsp;|&nbsp; ランダムデッキ</div>
+</header>
+
+<main>
+
+  <!-- インストール -->
+  <section>
+    <h2>🚀 インストール &amp; 起動</h2>
+    <div class="install-box">
+      <pre><span class="comment"># リポジトリをクローン</span>
+git clone &lt;this-repo&gt;
+cd Claude-card
+
+<span class="comment"># 依存パッケージのインストール</span>
+pip install -r requirements.txt
+
+<span class="comment"># ゲーム起動</span>
+python main.py</pre>
+    </div>
+  </section>
+
+  <!-- ゲームルール -->
+  <section>
+    <h2>📜 ゲームルール</h2>
+    <ul class="rules-list">
+      <li><span>デッキ</span> — 各プレイヤーは30枚のランダムデッキ（土地12・クリーチャー10・呪文8）を使用</li>
+      <li><span>初期ライフ</span> — 20点。先手は最初のドローなし</li>
+      <li><span>マナ</span> — 土地をタップして1マナを生み出す。1ターンに土地1枚まで設置可能</li>
+      <li><span>ターン進行</span> — アンタップ → ドロー → メインフェーズ（カードプレイ） → 戦闘 → 終了</li>
+      <li><span>勝利条件</span> — 相手のライフを 0 以下にする</li>
+    </ul>
+  </section>
+
+  <!-- 特殊能力 -->
+  <section>
+    <h2>✨ 特殊能力</h2>
+    <table class="ability-table">
+      <thead><tr><th>記号</th><th>能力</th><th>効果</th></tr></thead>
+      <tbody>
+        <tr><td class="sym">⚔</td><td>先制攻撃</td><td>戦闘ダメージを相手より先に与える</td></tr>
+        <tr><td class="sym">☠</td><td>接死</td><td>このクリーチャーが与えるダメージはどんな量でも致死</td></tr>
+        <tr><td class="sym">✈</td><td>飛行</td><td>飛行を持つクリーチャーのみブロック可能</td></tr>
+        <tr><td class="sym">⚡</td><td>踏み荒らし</td><td>ブロッカーを超えた余剰ダメージがプレイヤーへ貫通</td></tr>
+        <tr><td class="sym">◎</td><td>警戒</td><td>攻撃してもタップしない</td></tr>
+        <tr><td class="sym">♥</td><td>絆魂</td><td>与えたダメージと同量のライフを回復する</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- クリーチャーカード紹介 -->
+  <section>
+    <h2>🐉 クリーチャーカード（一部）</h2>
+    <div class="card-grid">
+
+      <div class="card type-creature">
+        <div class="card-header">
+          <div class="card-name">ゴブリンの斥候</div>
+          <div class="card-cost">1</div>
+        </div>
+        <div class="card-type">クリーチャー</div>
+        <div class="card-stats">1 / 1</div>
+        <div class="card-desc">小柄だが素早いゴブリンの偵察兵。</div>
+      </div>
+
+      <div class="card type-creature">
+        <div class="card-header">
+          <div class="card-name">エルフの弓使い</div>
+          <div class="card-cost">2</div>
+        </div>
+        <div class="card-type">クリーチャー</div>
+        <div class="card-stats">2 / 1</div>
+        <div class="card-abilities"><span class="ability-tag ab-first">⚔ 先制攻撃</span></div>
+        <div class="card-desc">精霊の森で鍛えた狙撃の名手。</div>
+      </div>
+
+      <div class="card type-creature">
+        <div class="card-header">
+          <div class="card-name">影の暗殺者</div>
+          <div class="card-cost">3</div>
+        </div>
+        <div class="card-type">クリーチャー</div>
+        <div class="card-stats">3 / 1</div>
+        <div class="card-abilities"><span class="ability-tag ab-death">☠ 接死</span></div>
+        <div class="card-desc">闇に潜み一撃で命を奪う暗殺者。</div>
+      </div>
+
+      <div class="card type-creature">
+        <div class="card-header">
+          <div class="card-name">竜の幼体</div>
+          <div class="card-cost">3</div>
+        </div>
+        <div class="card-type">クリーチャー</div>
+        <div class="card-stats">2 / 2</div>
+        <div class="card-abilities"><span class="ability-tag ab-fly">✈ 飛行</span></div>
+        <div class="card-desc">まだ幼いが将来有望な竜の子。</div>
+      </div>
+
+      <div class="card type-creature">
+        <div class="card-header">
+          <div class="card-name">古代の樹人</div>
+          <div class="card-cost">6</div>
+        </div>
+        <div class="card-type">クリーチャー</div>
+        <div class="card-stats">4 / 6</div>
+        <div class="card-abilities"><span class="ability-tag ab-tramp">⚡ 踏み荒らし</span></div>
+        <div class="card-desc">何百年も生きた巨大な木の精霊。</div>
+      </div>
+
+      <div class="card type-creature">
+        <div class="card-header">
+          <div class="card-name">年老いた竜</div>
+          <div class="card-cost">8</div>
+        </div>
+        <div class="card-type">クリーチャー</div>
+        <div class="card-stats">6 / 6</div>
+        <div class="card-abilities">
+          <span class="ability-tag ab-fly">✈ 飛行</span>
+          <span class="ability-tag ab-tramp">⚡ 踏み荒らし</span>
+        </div>
+        <div class="card-desc">数千年を生きた最古の竜。</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 呪文カード紹介 -->
+  <section>
+    <h2>🔮 呪文カード（一部）</h2>
+    <div class="card-grid">
+
+      <div class="card type-spell">
+        <div class="card-header">
+          <div class="card-name">雷撃</div>
+          <div class="card-cost">1</div>
+        </div>
+        <div class="card-type">呪文</div>
+        <div class="card-desc">対象1体に2ダメージを与える。</div>
+      </div>
+
+      <div class="card type-spell">
+        <div class="card-header">
+          <div class="card-name">火の玉</div>
+          <div class="card-cost">3</div>
+        </div>
+        <div class="card-type">呪文</div>
+        <div class="card-desc">対象1体に4ダメージを与える。</div>
+      </div>
+
+      <div class="card type-spell">
+        <div class="card-header">
+          <div class="card-name">炎の嵐</div>
+          <div class="card-cost">4</div>
+        </div>
+        <div class="card-type">呪文</div>
+        <div class="card-desc">相手の全クリーチャーに2ダメージを与える。</div>
+      </div>
+
+      <div class="card type-spell">
+        <div class="card-header">
+          <div class="card-name">聖なる光</div>
+          <div class="card-cost">2</div>
+        </div>
+        <div class="card-type">呪文</div>
+        <div class="card-desc">自分は6ライフを得る。</div>
+      </div>
+
+      <div class="card type-spell">
+        <div class="card-header">
+          <div class="card-name">死者召喚</div>
+          <div class="card-cost">2</div>
+        </div>
+        <div class="card-type">呪文</div>
+        <div class="card-desc">墓地からクリーチャー1体を手札に戻す。</div>
+      </div>
+
+      <div class="card type-spell">
+        <div class="card-header">
+          <div class="card-name">秘術の一撃</div>
+          <div class="card-cost">5</div>
+        </div>
+        <div class="card-type">呪文</div>
+        <div class="card-desc">対象1体に6ダメージを与える。</div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  ⚔ Fantasy Card Battle — Built with Python &amp; rich &nbsp;|&nbsp; Fantasy theme card game
+</footer>
+
+</body>
+</html>
